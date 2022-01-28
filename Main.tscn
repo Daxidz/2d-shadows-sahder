@@ -1,0 +1,129 @@
+[gd_scene load_steps=9 format=2]
+
+[ext_resource path="res://res/img/column.png" type="Texture" id=1]
+[ext_resource path="res://res/img/bg.png" type="Texture" id=2]
+[ext_resource path="res://res/img/bas_col_sh.png" type="Texture" id=3]
+[ext_resource path="res://res/img/light_small.png" type="Texture" id=4]
+
+[sub_resource type="Shader" id=3]
+code = "shader_type canvas_item;
+uniform sampler2D heightmap;
+
+void fragment(){ 
+    vec4 heightmap_tex = texture(heightmap, UV);
+    if(heightmap_tex.a > 0.9){
+		COLOR = texture(TEXTURE, UV) + vec4(1.0, 1.0, 1.0, 0.0) * (heightmap_tex.r * 255.0 + 0.1);
+    } else {
+        COLOR = texture(TEXTURE, UV);
+    }
+}"
+
+[sub_resource type="ShaderMaterial" id=4]
+shader = SubResource( 3 )
+shader_param/heightmap = ExtResource( 3 )
+
+[sub_resource type="Shader" id=1]
+code = "shader_type canvas_item;
+
+uniform float angle = 0.0;
+uniform float len = 10;
+uniform int max_steps = 50;
+
+void fragment() {
+	vec4 col;
+	vec4 lookupColor;
+	float lookupX;
+	float lookupY;
+	
+	col = texture(SCREEN_TEXTURE, SCREEN_UV);
+	
+	if (col.r > 1.0) {
+		col.r = mod(col.r, 1.0);
+        col.g = mod(col.g, 1.0);
+        col.b = mod(col.b, 1.0);
+	} else {
+		for (int i = 0; i < int(max_steps); i++) {
+			
+			float dist = SCREEN_PIXEL_SIZE.x * float(i);
+			float disty = SCREEN_PIXEL_SIZE.y * float(i);
+			
+			lookupX = SCREEN_UV.x + dist * sin(radians(angle)); 
+			lookupY = SCREEN_UV.y + dist * cos(radians(angle));
+//			lookupX = SCREEN_UV.x + distx; 
+//			lookupY = SCREEN_UV.y + disty; 
+			lookupColor = texture(SCREEN_TEXTURE, vec2(lookupX, lookupY));
+			
+			if (lookupColor.r > 1.0) {
+				float height = round(lookupColor.r) * SCREEN_PIXEL_SIZE.y;
+				if (distance(SCREEN_UV, vec2(lookupX, lookupY)) < height) {
+//				if (distx < height) {
+					col = col - vec4(0.2,0.3,0.2,0.6);
+//					
+				} else {
+//					break;
+				}
+				break;
+			}
+		}
+	}
+	
+	COLOR = col;
+	
+}"
+
+[sub_resource type="ShaderMaterial" id=2]
+shader = SubResource( 1 )
+shader_param/angle = 300.0
+shader_param/len = 50.0
+shader_param/max_steps = 1000
+
+[node name="Node2D" type="Node2D"]
+
+[node name="CanvasModulate" type="CanvasModulate" parent="."]
+visible = false
+color = Color( 0.827451, 0.843137, 0.658824, 1 )
+
+[node name="bg" type="Sprite" parent="."]
+position = Vector2( 240, 136 )
+texture = ExtResource( 2 )
+
+[node name="Node2D" type="Node2D" parent="."]
+
+[node name="column2" type="Sprite" parent="Node2D"]
+material = SubResource( 4 )
+position = Vector2( 136, 40 )
+texture = ExtResource( 1 )
+centered = false
+
+[node name="column" type="Sprite" parent="Node2D"]
+material = SubResource( 4 )
+position = Vector2( 240, 48 )
+texture = ExtResource( 1 )
+centered = false
+
+[node name="column3" type="Sprite" parent="Node2D"]
+material = SubResource( 4 )
+position = Vector2( 336, 128 )
+texture = ExtResource( 1 )
+centered = false
+
+[node name="ColorRect" type="ColorRect" parent="Node2D"]
+material = SubResource( 2 )
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_left = 2.71964
+margin_top = 1.82465
+margin_right = 482.72
+margin_bottom = 271.825
+__meta__ = {
+"_edit_lock_": true,
+"_edit_use_anchors_": false
+}
+
+[node name="Light2D" type="Light2D" parent="."]
+visible = false
+position = Vector2( 136, 144 )
+scale = Vector2( 2.52344, 2.26562 )
+texture = ExtResource( 4 )
+color = Color( 0.462745, 0.352941, 0.352941, 1 )
+range_height = -264.3
